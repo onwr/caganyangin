@@ -1,0 +1,46 @@
+.thumbs-slider {
+  overflow: hidden !important;
+}
+
+.thumbs-slider .swiper-wrapper {
+  transition-timing-function: linear !important;
+  height: auto !important;
+}
+
+.thumbs-slider .swiper-slide {
+  height: auto !important;
+  cursor: pointer;
+}
+
+.blog-slider .swiper-button-next,
+.blog-slider .swiper-button-prev {
+  color: #12a6a6;
+  background: rgba(255, 255, 255, 0.1);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  backdrop-filter: blur(4px);
+}
+
+.blog-slider .swiper-button-next:after,
+.blog-slider .swiper-button-prev:after {
+  font-size: 16px;
+}
+
+.blog-slider .swiper-button-next:hover,
+.blog-slider .swiper-button-prev:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.product-slider .swiper-button-next::after,
+.product-slider .swiper-button-prev::after {
+  display: none;
+}
+
+.product-slider .swiper-slide {
+  background: white;
+}
+
+.thumbs-slider .swiper-slide-thumb-active img {
+  border-color: #12a6a6;
+}
