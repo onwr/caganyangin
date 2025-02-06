@@ -1,8 +1,9 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { BsGrid, BsBox, BsEnvelope, BsBuilding, BsGear, BsBoxArrowRight } from 'react-icons/bs';
+import { BsGrid, BsBox, BsBuilding, BsGear, BsBoxArrowRight } from 'react-icons/bs';
 import { FaBuildingUser } from 'react-icons/fa6';
 import { PiDress } from 'react-icons/pi';
+import { TableOfContents } from 'lucide-react';
 
 const AdminLayout = ({ children }) => {
   const location = useLocation();
@@ -23,6 +24,11 @@ const AdminLayout = ({ children }) => {
       title: 'Kurumsal',
       path: '/admin/corporate',
       icon: <BsBuilding />,
+    },
+    {
+      title: 'Alt Sayfalar',
+      path: '/admin/icerik',
+      icon: <TableOfContents />,
     },
     {
       title: 'Ayarlar',

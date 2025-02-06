@@ -14,7 +14,6 @@ const BlogMedia = () => {
   const fetchBlogData = async () => {
     const snapshot = await getDocs(collection(db, 'blog'));
     const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    console.log(data);
     setBlogData(data);
   };
 
@@ -60,52 +59,70 @@ const BlogMedia = () => {
           <h2 className='text-4xl font-bold text-white'>EN SON HABERLER VE BLOG YAZILARIMIZ</h2>
         </div>
 
-        <Swiper
-          modules={[Navigation, Autoplay]}
-          spaceBetween={30}
-          slidesPerView={2}
-          autoplay={{
-            delay: 5000,
-            disableOnInteraction: false,
-          }}
-          breakpoints={{
-            0: {
-              slidesPerView: 1,
-            },
-            768: {
-              slidesPerView: 2,
-            },
-          }}
-          className='blog-slider'
-        >
-          {blogData.map((blog) => (
-            <SwiperSlide key={blog.id}>
-              <div
-                className='group cursor-pointer overflow-hidden rounded-xl bg-[#363636]'
-                onClick={() => handleBlogClick(blog)}
-              >
-                <div className='relative h-64 overflow-hidden'>
-                  <img
-                    src={blog.image}
-                    alt={blog.title}
-                    className='h-full w-full object-contain opacity-60 transition-transform duration-500 group-hover:scale-110'
-                  />
-                  <div className='absolute inset-0 bg-gradient-to-t from-black/80 to-transparent' />
-                  <div className='absolute right-4 bottom-4 left-4'>
-                    <span className='mb-2 inline-block rounded-full bg-[#12a6a6] px-3 py-1 text-sm text-white'>
-                      {blog.category}
-                    </span>
-                    <h3 className='text-xl font-bold text-white'>{blog.title}</h3>
-                    <p className='mt-2 text-sm text-gray-300'>{formatDate(blog.date)}</p>
-                  </div>
-                </div>
-                <div className='p-6'>
-                  <p className='text-gray-400'>{blog.description}</p>
+        <div className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
+          {blogData[0] && (
+            <div
+              className='group col-span-2 cursor-pointer overflow-hidden rounded-xl bg-[#363636]'
+              onClick={() => handleBlogClick(blogData[0])}
+            >
+              <div className='relative h-[600px] overflow-hidden'>
+                <img
+                  src={blogData[0].image}
+                  alt={blogData[0].title}
+                  className='h-full w-full object-contain opacity-60 transition-transform duration-500 group-hover:scale-110'
+                />
+                <div className='absolute inset-0 bg-gradient-to-t from-black/80 to-transparent' />
+                <div className='absolute right-4 bottom-4 left-4'>
+                  <span className='mb-2 inline-block rounded-full bg-[#12a6a6] px-3 py-1 text-sm text-white'>
+                    {blogData[0].category}
+                  </span>
+                  <h3 className='text-2xl font-bold text-white'>{blogData[0].title}</h3>
+                  <p className='mt-2 text-sm text-gray-300'>{formatDate(blogData[0].date)}</p>
+                  <p className='mt-4 text-gray-400'>{blogData[0].description}</p>
                 </div>
               </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
+            </div>
+          )}
+
+          <div className='col-span-1'>
+            <Swiper
+              modules={[Navigation, Autoplay]}
+              direction='vertical'
+              spaceBetween={20}
+              slidesPerView={2}
+              autoplay={{
+                delay: 5000,
+                disableOnInteraction: false,
+              }}
+              className='h-[600px]'
+            >
+              {blogData.slice(1).map((blog) => (
+                <SwiperSlide key={blog.id}>
+                  <div
+                    className='group h-[290px] cursor-pointer overflow-hidden rounded-xl bg-[#363636]'
+                    onClick={() => handleBlogClick(blog)}
+                  >
+                    <div className='relative h-full w-full'>
+                      <img
+                        src={blog.image}
+                        alt={blog.title}
+                        className='h-full w-full object-cover opacity-60 transition-transform duration-500 group-hover:scale-110'
+                      />
+                      <div className='absolute inset-0 bg-gradient-to-t from-black/80 to-transparent' />
+                      <div className='absolute right-4 bottom-4 left-4'>
+                        <span className='mb-2 inline-block rounded-full bg-[#12a6a6] px-3 py-1 text-sm text-white'>
+                          {blog.category}
+                        </span>
+                        <h3 className='text-lg font-bold text-white'>{blog.title}</h3>
+                        <p className='mt-2 text-sm text-gray-300'>{formatDate(blog.date)}</p>
+                      </div>
+                    </div>
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
+        </div>
       </div>
 
       {isModalOpen && selectedBlog && (

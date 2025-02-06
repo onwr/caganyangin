@@ -2,8 +2,6 @@ import React from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import Home from './pages/Home';
 import About from './pages/About';
-import Certificates from './pages/Certificates';
-import Referances from './pages/Referances';
 import Danismanlik from './pages/Danismanlik';
 import Services from './pages/Services';
 import Contact from './pages/Contact';
@@ -18,20 +16,21 @@ import Settings from './pages/admin/Settings';
 import Medya from './pages/admin/Medya';
 import Login from './pages/admin/Login';
 import ReferansBelge from './pages/admin/ReferansBelge';
+import IcerikDetay from './pages/IcerikDetay';
+import AltSayfalar from './pages/admin/AltSayfalar';
 
 const App = () => (
   <BrowserRouter>
     <Routes>
       <Route path='/' element={<Home />} />
       <Route path='/hakkimizda' element={<About />} />
-      <Route path='/belgeler' element={<Certificates />} />
-      <Route path='/referanslar' element={<Referances />} />
       <Route path='/danismanlik' element={<Danismanlik />} />
       <Route path='/hizmetlerimiz' element={<Services />} />
       <Route path='/iletisim' element={<Contact />} />
       <Route path='/urunler/:slug' element={<CategoryDetail />} />
       <Route path='/urun/:docId' element={<ProductDetail />} />
       <Route path='/yonetici/giris' element={<Login />} />
+      <Route path='/:docId/:slug' element={<IcerikDetay />} />
       <Route
         path='/admin'
         element={
@@ -88,6 +87,16 @@ const App = () => (
           <ProtectedRoute>
             <AdminLayout>
               <Medya />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/admin/icerik'
+        element={
+          <ProtectedRoute>
+            <AdminLayout>
+              <AltSayfalar />
             </AdminLayout>
           </ProtectedRoute>
         }

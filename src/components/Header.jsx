@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HiMenuAlt3, HiX, HiSearch } from 'react-icons/hi';
 import { FaChevronDown } from 'react-icons/fa';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, doc, getDoc } from 'firebase/firestore';
 import { db } from 'src/db/Firebase';
 
 const Header = () => {
@@ -13,54 +13,70 @@ const Header = () => {
   const [hoveredSubItem, setHoveredSubItem] = useState(null);
   const [categories, setCategories] = useState([]);
   const navigate = useNavigate();
-
+  const [services, setServices] = useState([]);
+  const [fireEquipments, setFireEquipments] = useState([]);
+  const [workSafety, setWorkSafety] = useState([]);
+  
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       try {
         const categoriesRef = collection(db, 'categories');
         const q = query(categoriesRef, orderBy('order', 'asc'));
         const querySnapshot = await getDocs(q);
-
+  
         const categoriesData = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
-
         setCategories(categoriesData);
+  
+        const icerikDoc = doc(db, 'icerik', 'hizmetlerimiz');
+        const icerikSnapshot = await getDoc(icerikDoc);
+        
+        if (icerikSnapshot.exists()) {
+          const servicesData = icerikSnapshot.data().categories || [];
+          setServices(servicesData);
+        }
+  
+        const fireEquipDoc = doc(db, 'icerik', 'yangin-ekipmanlari');
+        const fireEquipSnapshot = await getDoc(fireEquipDoc);
+        
+        if (fireEquipSnapshot.exists()) {
+          const fireEquipData = fireEquipSnapshot.data().categories || [];
+          setFireEquipments(fireEquipData);
+        }
+  
+        const workSafetyDoc = doc(db, 'icerik', 'is-guvenligi');
+        const workSafetySnapshot = await getDoc(workSafetyDoc);
+        
+        if (workSafetySnapshot.exists()) {
+          const workSafetyData = workSafetySnapshot.data().categories || [];
+          setWorkSafety(workSafetyData);
+        }
+  
       } catch (error) {
-        console.error('Kategoriler yüklenirken hata:', error);
+        console.error('Veriler yüklenirken hata:', error);
       }
     };
-
-    fetchCategories();
+  
+    fetchData();
   }, []);
-
+  
   const menuItems = [
     { title: 'Anasayfa', link: '/' },
+    { title: 'Hakkımızda', link: '/hakkimizda' },
     {
-      title: 'Kurumsal',
-      link: '/kurumsal',
-      submenu: [
-        {
-          title: 'Hakkımızda',
-          link: '/hakkimizda',
-          image: '/images/logo.png',
-        },
-        {
-          title: 'Belgelerimiz',
-          link: '/belgeler',
-          image: '/images/logo.png',
-        },
-        {
-          title: 'Referanslarımız',
-          link: '/referanslar',
-          image: '/images/logo.png',
-        },
-      ],
+      title: 'Hizmetlerimiz',
+      link: '#',
+      submenu: services.map((service) => ({
+        title: service.title,
+        link: `/hizmetlerimiz/${service.slug}`,
+        image: service.image,
+        content: service.content,
+      })),
     },
-    { title: 'Danışmanlık', link: '/danismanlik' },
     {
-      title: 'Ürünlerimiz',
+      title: 'Söndürme Sistemleri',
       link: '#',
       submenu: categories.map((category) => ({
         title: category.title,
@@ -68,7 +84,27 @@ const Header = () => {
         image: category.image,
       })),
     },
-    { title: 'Hizmetlerimiz', link: '/hizmetlerimiz' },
+    {
+      title: 'Yangın Ekipmanları',
+      link: '#',
+      submenu: fireEquipments.map((item) => ({
+        title: item.title,
+        link: `/yangin-ekipmanlari/${item.slug}`,
+        image: item.image,
+        content: item.content,
+      })),
+    },
+    {
+      title: 'İş Güvenliği',
+      link: '#',
+      submenu: workSafety.map((item) => ({
+        title: item.title,
+        link: `/is-guvenligi/${item.slug}`,
+        image: item.image,
+        content: item.content,
+      })),
+    },
+    { title: 'Danışmanlık', link: '/danismanlik' },
     { title: 'İletişim', link: '/iletisim' },
   ];
 
@@ -118,14 +154,14 @@ const Header = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 20 }}
-                    className='absolute left-0 z-50 mt-2 flex w-[600px] rounded-lg bg-white py-4'
+                    className='absolute left-0 z-50 mt-10 flex w-[600px] rounded-lg bg-[#191919] py-4'
                   >
                     <div className='w-1/2'>
                       {item.submenu.map((subItem) => (
                         <Link
                           key={subItem.title}
                           to={subItem.link}
-                          className='block px-6 py-2 text-[#1f1f1f] hover:bg-gray-50 hover:text-[#ed9128]'
+                          className='block px-6 py-2 text-white hover:bg-gray-50 hover:text-[#ed9128]'
                           onMouseEnter={() => setHoveredSubItem(subItem.image)}
                           onMouseLeave={() => setHoveredSubItem(null)}
                           onClick={() => setActiveDropdown('')}
@@ -134,11 +170,11 @@ const Header = () => {
                         </Link>
                       ))}
                     </div>
-                    <div className='relative w-1/2 overflow-hidden rounded-l-xl bg-[#1f1f1f]'>
+                    <div className='relative w-1/2 h-[40vh] overflow-hidden rounded-l-xl bg-[#1f1f1f]'>
                       <AnimatePresence mode='wait'>
                         <motion.img
-                          key={hoveredSubItem || item.submenu[0].image}
-                          src={hoveredSubItem || item.submenu[0].image}
+                          key={hoveredSubItem || (item.submenu[0] && item.submenu[0].image)}
+                          src={hoveredSubItem || (item.submenu[0] && item.submenu[0].image)}
                           alt={item.title}
                           initial={{ opacity: 0, scale: 1.1 }}
                           animate={{
@@ -157,7 +193,7 @@ const Header = () => {
                               ease: 'easeIn',
                             },
                           }}
-                          className='h-48 w-full rounded-l-2xl object-contain'
+                          className='h-full w-full rounded-l-2xl object-cover'
                         />
                       </AnimatePresence>
                     </div>

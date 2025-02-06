@@ -1,22 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { db } from 'src/db/Firebase';
 import { collection, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
+import JoditEditor from 'jodit-react';
 
 const ReferansBelge = () => {
+  const editor = useRef(null);
   const [referanslar, setReferanslar] = useState([]);
   const [belgeler, setBelgeler] = useState([]);
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [belgeName, setBelgeName] = useState('');
   const [serviceTitle, setServiceTitle] = useState('');
+  const [serviceDetail, setServiceDetail] = useState('');
+  const [firmaName, setFirmaName] = useState('');
   const [selectedBelgeFile, setSelectedBelgeFile] = useState(null);
   const [selectedServiceFile, setSelectedServiceFile] = useState(null);
   const imgBB = import.meta.env.VITE_IMGBB_API_KEY;
 
+	const config = useMemo(
+		() => ({
+			readonly: false,
+			placeholder: 'İçerik...'
+		}),
+		[]
+	);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Referanslar
         const referansSnapshot = await getDocs(collection(db, 'referanslarimiz'));
         const referansData = referansSnapshot.docs.map((doc) => ({
           id: doc.id,
@@ -24,7 +35,6 @@ const ReferansBelge = () => {
         }));
         setReferanslar(referansData);
 
-        // Belgeler
         const belgelerSnapshot = await getDocs(collection(db, 'belgelerimiz'));
         const belgelerData = belgelerSnapshot.docs.map((doc) => ({
           id: doc.id,
@@ -32,7 +42,6 @@ const ReferansBelge = () => {
         }));
         setBelgeler(belgelerData);
 
-        // Hizmetler
         const servicesSnapshot = await getDocs(collection(db, 'services'));
         const servicesData = servicesSnapshot.docs.map((doc) => ({
           id: doc.id,
@@ -71,8 +80,16 @@ const ReferansBelge = () => {
 
       switch (type) {
         case 'referans':
+          if (!firmaName.trim()) {
+            alert('Lütfen firma adı giriniz');
+            setLoading(false);
+            return;
+          }
           collectionName = 'referanslarimiz';
-          docData = { logo: imageUrl };
+          docData = { 
+            logo: imageUrl,
+            firmaName: firmaName 
+          };
           break;
         case 'belge':
           if (!belgeName.trim()) {
@@ -89,8 +106,17 @@ const ReferansBelge = () => {
             setLoading(false);
             return;
           }
+          if (!serviceDetail.trim()) {
+            alert('Lütfen hizmet detayı giriniz');
+            setLoading(false);
+            return;
+          }
           collectionName = 'services';
-          docData = { image: imageUrl, title: serviceTitle };
+          docData = { 
+            image: imageUrl, 
+            title: serviceTitle,
+            detail: serviceDetail 
+          };
           break;
       }
 
@@ -106,6 +132,7 @@ const ReferansBelge = () => {
       switch (type) {
         case 'referans':
           setReferanslar(newData);
+          setFirmaName('');
           break;
         case 'belge':
           setBelgeler(newData);
@@ -115,6 +142,7 @@ const ReferansBelge = () => {
         case 'service':
           setServices(newData);
           setServiceTitle('');
+          setServiceDetail('');
           setSelectedServiceFile(null);
           break;
       }
@@ -165,28 +193,43 @@ const ReferansBelge = () => {
   return (
     <div className='p-4'>
       <div className='grid grid-cols-1 gap-8 md:grid-cols-3'>
-        {/* Referanslar Bölümü */}
         <div className='rounded-lg border p-4'>
           <h2 className='mb-4 text-2xl font-bold'>Referanslar</h2>
-          <input
-            type='file'
-            accept='image/*'
-            onChange={(e) => {
-              const file = e.target.files[0];
-              if (file) {
-                if (file.size > 2 * 1024 * 1024) {
-                  alert("Dosya boyutu 2MB'dan küçük olmalıdır");
-                  return;
-                }
-                uploadFile(file, 'referans');
-              }
-            }}
-            className='mb-4'
-          />
+          <div className='space-y-4'>
+            <div>
+              <label className='mb-2 block'>Firma Adı:</label>
+              <input
+                type='text'
+                value={firmaName}
+                onChange={(e) => setFirmaName(e.target.value)}
+                placeholder='Firma adını giriniz'
+                className='w-full rounded border p-2'
+              />
+            </div>
+            <div>
+              <label className='mb-2 block'>Firma Logosu:</label>
+              <input
+                type='file'
+                accept='image/*'
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    if (file.size > 2 * 1024 * 1024) {
+                      alert("Dosya boyutu 2MB'dan küçük olmalıdır");
+                      return;
+                    }
+                    uploadFile(file, 'referans');
+                  }
+                }}
+                className='mb-4 bg-gray-200 rounded-lg p-1'
+              />
+            </div>
+          </div>
           <div className='grid grid-cols-2 gap-4'>
             {referanslar.map((ref) => (
               <div key={ref.id} className='group relative border-2'>
                 <img src={ref.logo} alt='Referans Logo' className='h-32 w-full object-contain' />
+                <p className='mt-2 text-center font-medium'>{ref.firmaName}</p>
                 <button
                   onClick={() => handleDelete(ref.id, 'referans')}
                   className='absolute top-2 right-2 rounded bg-red-500 p-2 text-white opacity-0 transition-opacity group-hover:opacity-100'
@@ -198,7 +241,6 @@ const ReferansBelge = () => {
           </div>
         </div>
 
-        {/* Belgeler Bölümü */}
         <div className='rounded-lg border p-4'>
           <h2 className='mb-4 text-2xl font-bold'>Belgeler</h2>
           <div className='space-y-4'>
@@ -223,7 +265,7 @@ const ReferansBelge = () => {
                     handleFileSelect(file, 'belge');
                   }
                 }}
-                className='mb-4'
+                className='mb-4 bg-gray-200 rounded-lg p-1'
               />
             </div>
             {selectedBelgeFile && (
@@ -252,7 +294,6 @@ const ReferansBelge = () => {
           </div>
         </div>
 
-        {/* Hizmetler Bölümü */}
         <div className='rounded-lg border p-4'>
           <h2 className='mb-4 text-2xl font-bold'>Hizmetler</h2>
           <div className='space-y-4'>
@@ -267,6 +308,15 @@ const ReferansBelge = () => {
               />
             </div>
             <div>
+              <label className='mb-2 block'>Hizmet Detayı:</label>
+              <JoditEditor
+                ref={editor}
+                value={serviceDetail}
+                config={config}
+                onChange={newContent => setServiceDetail(newContent)}
+              />
+            </div>
+            <div>
               <label className='mb-2 block'>Hizmet Görseli:</label>
               <input
                 type='file'
@@ -277,14 +327,14 @@ const ReferansBelge = () => {
                     handleFileSelect(file, 'service');
                   }
                 }}
-                className='mb-4'
+                className='mb-4 bg-gray-200 rounded-lg p-1'
               />
             </div>
             {selectedServiceFile && (
               <button
                 onClick={() => uploadFile(selectedServiceFile, 'service')}
                 className='rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600'
-                disabled={!serviceTitle.trim()}
+                disabled={!serviceTitle.trim() || !serviceDetail.trim()}
               >
                 Yükle
               </button>
@@ -298,7 +348,8 @@ const ReferansBelge = () => {
                   alt={service.title}
                   className='h-32 w-full object-contain'
                 />
-                <p className='mt-2 text-center'>{service.title}</p>
+                <p className='mt-2 text-center font-medium'>{service.title}</p>
+                <div className='mt-2 px-2 text-sm' dangerouslySetInnerHTML={{ __html: service.detail }} />
                 <button
                   onClick={() => handleDelete(service.id, 'service')}
                   className='absolute top-2 right-2 rounded bg-red-500 p-2 text-white opacity-0 transition-opacity group-hover:opacity-100'
@@ -312,7 +363,7 @@ const ReferansBelge = () => {
       </div>
 
       {loading && (
-        <div className='bg-opacity-50 fixed inset-0 flex items-center justify-center bg-black'>
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50'>
           <div className='text-white'>Yükleniyor...</div>
         </div>
       )}

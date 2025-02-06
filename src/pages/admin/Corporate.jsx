@@ -17,6 +17,10 @@ const Corporate = () => {
       id: 'hakkimizda',
       title: 'Hakkımızda',
     },
+    {
+      id: 'danismanlik',
+      title: 'Danışmanlık',
+    },
   ];
 
   const config = {

@@ -48,21 +48,19 @@ const Footer = () => {
           <div className='flex flex-col gap-6'>
             <h3 className='text-lg font-semibold text-white'>Hızlı Menü</h3>
             <div className='flex flex-col gap-4 text-[#8a8a8a]'>
+            <a href='/' className='transition-colors hover:text-[#12a6a6]'>
+                Anasayfa
+              </a>
               <a href='/hakkimizda' className='transition-colors hover:text-[#12a6a6]'>
                 Hakkımızda
               </a>
               <a href='/hizmetlerimiz' className='transition-colors hover:text-[#12a6a6]'>
                 Hizmetlerimiz
               </a>
-              <a href='/ekipmanlar' className='transition-colors hover:text-[#12a6a6]'>
-                Ekipmanlar
+              <a href='/danismanlik' className='transition-colors hover:text-[#12a6a6]'>
+                Danışmanlık
               </a>
-              <a href='/belgelerimiz' className='transition-colors hover:text-[#12a6a6]'>
-                Belgelerimiz
-              </a>
-              <a href='/referanslarimiz' className='transition-colors hover:text-[#12a6a6]'>
-                Referanslarımız
-              </a>
+  
               <a href='/iletisim' className='transition-colors hover:text-[#12a6a6]'>
                 İletişim
               </a>

@@ -17,7 +17,7 @@ const AboutHero = () => {
   }, []);
 
   return (
-    <div className='bg-[#1f1f1f] py-20'>
+    <div className='bg-[#1f1f1f] pt-20 pb-5'>
       <div className='container mx-auto px-4'>
         <div className='flex flex-col gap-10 lg:flex-row lg:items-start'>
           <div className='w-full lg:w-1/2'>

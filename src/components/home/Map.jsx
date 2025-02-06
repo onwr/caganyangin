@@ -11,6 +11,8 @@ const istanbulDistricts = [
   { id: 8, name: 'Maltepe', description: 'Yangın Söndürme Sistemleri ve Ekipmanları' },
   { id: 9, name: 'Fatih', description: 'Yangın Söndürme Sistemleri ve Ekipmanları' },
   { id: 10, name: 'Sarıyer', description: 'Yangın Söndürme Sistemleri ve Ekipmanları' },
+  { id: 11, name: 'Başakşehir', description: 'Yangın Söndürme Sistemleri ve Ekipmanları' },
+  { id: 12, name: 'Tüm İstanbul', description: 'Yangın Söndürme Sistemleri ve Ekipmanları' },
 ];
 
 const Map = () => {

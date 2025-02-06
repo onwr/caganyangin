@@ -1,24 +1,26 @@
-import Content from '@components/Content'
-import Footer from '@components/Footer'
-import Header from '@components/Header'
-import React from 'react'
+import Content from '@components/Content';
+import Footer from '@components/Footer';
+import Header from '@components/Header';
+import { doc, getDoc } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
+import { db } from 'src/db/Firebase';
 
-const AuditServices = () => (
+const AuditServices = ({ hakkimda }) => (
   <div className="bg-[#1f1f1f] py-8">
     <div className="container mx-auto px-4">
       <h2 className="text-3xl text-white font-bold mb-8">İzlenebilirlik Denetimi Danışmanlığı</h2>
-      <p className="text-white mb-8">
-        Firmanız ve tedarik zincirinizdeki üreticilerin rutin denetimleri, marka onayına hazırlama konusunda hizmet vermekteyiz. 
-        Markanın kendi denetçilerinin bu denetimi yapabileceği gibi 3. taraf denetim kuruluşlarının da bu denetimi yaptıklarını bilmekteyiz. 
-        Güçlü bir ekip ile tüm marka denetim ve sertifikasyon işlemlerinizde sizlere kaliteli hizmet veriyoruz.
-      </p>
+      {hakkimda?.metin ? (
+        <p className="text-white mb-8" dangerouslySetInnerHTML={{ __html: hakkimda.metin }} />
+      ) : (
+        <p className="text-white mb-8">Yükleniyor...</p>
+      )}
     </div>
   </div>
 );
 
 const ServicesList = ({ title, items }) => (
   <div className="pb-8 text-white bg-[#1f1f1f]">
-    <h3 className="text-2xl  font-semibold mb-6">{title}</h3>
+    <h3 className="text-2xl font-semibold mb-6">{title}</h3>
     <ul className="space-y-2">
       {items.map((item, index) => (
         <li key={index} className="flex items-center">
@@ -89,6 +91,19 @@ const ProductsSection = () => (
 );
 
 const Danismanlik = () => {
+  const [hakkimda, setHakkimda] = useState(null);
+
+  useEffect(() => {
+    const fetchHakkimda = async () => {
+      const docRef = doc(db, 'kurumsal', 'hakkimizda');
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        setHakkimda(docSnap.data());
+      }
+    };
+    fetchHakkimda();
+  }, []);
+
   const auditProcesses = [
     "Marka Denetimleri ( Inditex, Primark, C&A, H&M, Puma)",
     "Amfori BSCI",
@@ -111,12 +126,12 @@ const Danismanlik = () => {
   return (
     <div>
       <Header />
-      <Content 
-        baslik={"DANIŞMANLIK"} 
-        aciklama={"Çağan Yangın Sistemleri ve Güvenlik Ekipmanları"} 
+      <Content
+        baslik={"DANIŞMANLIK"}
+        aciklama={"Çağan Yangın Sistemleri ve Güvenlik Ekipmanları"}
       />
       <div className="bg-[#1f1f1f]">
-        <AuditServices />
+        <AuditServices hakkimda={hakkimda} />
         <div className="container mx-auto px-4">
           <ServicesList title="Denetim Süreçleri" items={auditProcesses} />
           <ServicesList title="Verilen Hizmetler" items={services} />
