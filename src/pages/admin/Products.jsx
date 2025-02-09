@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   collection,
@@ -34,10 +34,19 @@ const Products = () => {
     images: [],
     olcuvekodlar: [],
     features: [],
+    colors: [],
   });
 
   const [editingCategory, setEditingCategory] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
+
+  const config = useMemo(
+    () => ({
+      readonly: false, // all options from https://xdsoft.net/jodit/docs/,
+      placeholder: 'Detaylı Açıklama...',
+    }),
+    []
+  );
 
   useEffect(() => {
     fetchCategories();
@@ -70,7 +79,7 @@ const Products = () => {
     }
   };
 
-  const handleImageUpload = async (e, isProduct = false) => {
+  const handleImageUpload = async (e, isProduct = false, colorIndex = null) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -84,10 +93,22 @@ const Products = () => {
       const imageUrl = await uploadImage(file);
       if (imageUrl) {
         if (isProduct) {
-          setProductForm((prev) => ({
-            ...prev,
-            images: [...prev.images, imageUrl],
-          }));
+          if (colorIndex !== null) {
+            const newColors = [...productForm.colors];
+            newColors[colorIndex] = {
+              ...newColors[colorIndex],
+              images: [...newColors[colorIndex].images, imageUrl],
+            };
+            setProductForm((prev) => ({
+              ...prev,
+              colors: newColors,
+            }));
+          } else {
+            setProductForm((prev) => ({
+              ...prev,
+              images: [...prev.images, imageUrl],
+            }));
+          }
         } else {
           setCategoryForm((prev) => ({ ...prev, image: imageUrl }));
         }
@@ -173,6 +194,7 @@ const Products = () => {
         images: [],
         olcuvekodlar: [],
         features: [],
+        colors: [],
       });
       setEditingProduct(null);
     } catch (error) {
@@ -243,6 +265,40 @@ const Products = () => {
     setProductForm((prev) => ({
       ...prev,
       images: prev.images.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleAddColor = () => {
+    setProductForm((prev) => ({
+      ...prev,
+      colors: [...prev.colors, { name: '', images: [] }],
+    }));
+  };
+
+  const handleColorChange = (index, value) => {
+    const newColors = [...productForm.colors];
+    newColors[index] = { ...newColors[index], name: value };
+    setProductForm((prev) => ({
+      ...prev,
+      colors: newColors,
+    }));
+  };
+
+  const handleRemoveColor = (colorIndex) => {
+    setProductForm((prev) => ({
+      ...prev,
+      colors: prev.colors.filter((_, index) => index !== colorIndex),
+    }));
+  };
+
+  const handleRemoveColorImage = (colorIndex, imageIndex) => {
+    const newColors = [...productForm.colors];
+    newColors[colorIndex].images = newColors[colorIndex].images.filter(
+      (_, index) => index !== imageIndex
+    );
+    setProductForm((prev) => ({
+      ...prev,
+      colors: newColors,
     }));
   };
 
@@ -416,46 +472,7 @@ const Products = () => {
                 <label className='mb-1 block text-sm font-medium'>Açıklama</label>
                 <JoditEditor
                   value={productForm.description}
-                  config={{
-                    readonly: false,
-                    height: 300,
-                    language: 'tr',
-                    buttons: [
-                      'source',
-                      '|',
-                      'bold',
-                      'italic',
-                      'underline',
-                      '|',
-                      'ul',
-                      'ol',
-                      '|',
-                      'font',
-                      'fontsize',
-                      'brush',
-                      'paragraph',
-                      '|',
-                      'image',
-                      'table',
-                      'link',
-                      '|',
-                      'left',
-                      'center',
-                      'right',
-                      'justify',
-                      '|',
-                      'undo',
-                      'redo',
-                      '|',
-                      'hr',
-                      'eraser',
-                      'fullsize',
-                    ],
-                    uploader: {
-                      insertImageAsBase64URI: true,
-                    },
-                    removeButtons: ['about'],
-                  }}
+                  config={config}
                   onBlur={(newContent) =>
                     setProductForm({ ...productForm, description: newContent })
                   }
@@ -558,6 +575,87 @@ const Products = () => {
                 </div>
               </div>
 
+              <div>
+                <div className='mb-2 flex items-center justify-between'>
+                  <label className='text-sm font-medium'>Renk Seçenekleri</label>
+                  <button
+                    type='button'
+                    onClick={handleAddColor}
+                    className='flex items-center gap-1 rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700'
+                  >
+                    <BsPlus className='h-5 w-5' />
+                    Renk Ekle
+                  </button>
+                </div>
+                <div className='space-y-6'>
+                  {productForm.colors.map((color, colorIndex) => (
+                    <div key={colorIndex} className='rounded-lg border border-gray-200 p-4'>
+                      <div className='mb-4 flex items-center justify-between'>
+                        <input
+                          type='text'
+                          value={color.name}
+                          onChange={(e) => handleColorChange(colorIndex, e.target.value)}
+                          placeholder='Renk adı (örn: Siyah)'
+                          className='w-full rounded border p-2'
+                        />
+                        <button
+                          type='button'
+                          onClick={() => handleRemoveColor(colorIndex)}
+                          className='ml-2 rounded bg-red-500 p-2 text-white hover:bg-red-600'
+                        >
+                          <BsTrash className='h-4 w-4' />
+                        </button>
+                      </div>
+
+                      <div className='flex flex-wrap gap-4'>
+                        {color.images.map((image, imageIndex) => (
+                          <div key={imageIndex} className='relative'>
+                            <img src={image} alt='' className='h-20 w-20 rounded object-cover' />
+                            <button
+                              type='button'
+                              onClick={() => handleRemoveColorImage(colorIndex, imageIndex)}
+                              className='absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600'
+                            >
+                              <svg className='h-4 w-4' viewBox='0 0 20 20' fill='currentColor'>
+                                <path
+                                  fillRule='evenodd'
+                                  d='M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z'
+                                  clipRule='evenodd'
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                        <div className='relative'>
+                          <input
+                            type='file'
+                            accept='image/*'
+                            onChange={(e) => handleImageUpload(e, true, colorIndex)}
+                            className='absolute inset-0 cursor-pointer opacity-0'
+                          />
+                          <button
+                            type='button'
+                            className='flex h-20 w-20 items-center justify-center rounded border-2 border-dashed border-gray-300 hover:border-gray-400'
+                          >
+                            <svg
+                              className='h-8 w-8 text-gray-400'
+                              viewBox='0 0 20 20'
+                              fill='currentColor'
+                            >
+                              <path
+                                fillRule='evenodd'
+                                d='M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z'
+                                clipRule='evenodd'
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div className='flex gap-2'>
                 <motion.button
                   type='submit'
@@ -588,6 +686,7 @@ const Products = () => {
                         images: [],
                         olcuvekodlar: [],
                         features: [],
+                        colors: [],
                       });
                     }}
                     className='rounded-lg bg-gray-100 px-4 py-2 text-gray-600 hover:bg-gray-200'

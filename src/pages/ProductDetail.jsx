@@ -20,6 +20,8 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
   const [activeTab, setActiveTab] = useState('details');
+  const [selectedColor, setSelectedColor] = useState(null);
+  const [currentImages, setCurrentImages] = useState([]);
 
   useEffect(() => {
     const fetchProductAndCategory = async () => {
@@ -33,6 +35,12 @@ const ProductDetail = () => {
             ...productSnap.data(),
           };
           setProduct(productData);
+          setCurrentImages(productData.images || []);
+
+          // İlk renk varsa onu seç
+          if (productData.colors && productData.colors.length > 0) {
+            setSelectedColor(productData.colors[0]);
+          }
 
           const categoryRef = collection(db, 'categories');
           const categoryQuery = query(categoryRef, where('slug', '==', productData.categorySlug));
@@ -54,6 +62,15 @@ const ProductDetail = () => {
 
     fetchProductAndCategory();
   }, [docId]);
+
+  // Renk seçildiğinde resimleri güncelle
+  useEffect(() => {
+    if (selectedColor) {
+      setCurrentImages(selectedColor.images);
+    } else if (product) {
+      setCurrentImages(product.images);
+    }
+  }, [selectedColor, product]);
 
   if (loading) {
     return (
@@ -92,7 +109,7 @@ const ProductDetail = () => {
                 modules={[Thumbs]}
                 className='product-slider h-full w-full'
               >
-                {product?.images?.map((image, index) => (
+                {currentImages?.map((image, index) => (
                   <SwiperSlide key={index}>
                     <div className='flex h-full w-full items-center justify-center'>
                       <img
@@ -111,6 +128,27 @@ const ProductDetail = () => {
             <p className='text-xl font-semibold text-white md:text-2xl'>
               {product?.title ? product?.title : ''}
             </p>
+
+            {product?.colors && product.colors.length > 0 && (
+              <div className='mt-6'>
+                <p className='mb-3 text-sm font-medium text-white'>Renk Seçenekleri:</p>
+                <div className='flex flex-wrap gap-3'>
+                  {product.colors.map((color, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedColor(color === selectedColor ? null : color)}
+                      className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                        color === selectedColor
+                          ? 'bg-[#12a6a6] text-white'
+                          : 'bg-[#363636] text-white hover:bg-[#12a6a6]'
+                      }`}
+                    >
+                      {color.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className='mt-6 md:mt-8'>
               <div className='flex w-full flex-col gap-2 sm:flex-row sm:gap-0'>
