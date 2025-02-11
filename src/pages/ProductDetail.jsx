@@ -22,6 +22,7 @@ const ProductDetail = () => {
   const [activeTab, setActiveTab] = useState('details');
   const [selectedColor, setSelectedColor] = useState(null);
   const [currentImages, setCurrentImages] = useState([]);
+  const [isColorMenuOpen, setIsColorMenuOpen] = useState(false);
 
   useEffect(() => {
     const fetchProductAndCategory = async () => {
@@ -103,6 +104,51 @@ const ProductDetail = () => {
         <div className='container mx-auto flex flex-col gap-10 px-4 py-6 lg:flex-row'>
           <div className='w-full lg:w-1/2'>
             <div className='relative mx-auto h-[50vh] w-full rounded-lg bg-white p-4 md:h-[60vh] lg:h-[75vh] lg:max-w-[100vh]'>
+              {product?.colors && product.colors.length > 0 && (
+                <motion.div
+                  initial={{ width: '48px' }}
+                  animate={{ width: isColorMenuOpen ? '200px' : '48px' }}
+                  onClick={() => setIsColorMenuOpen(!isColorMenuOpen)}
+                  className='absolute top-1/2 -right-0 z-20 flex -translate-y-1/2 transform cursor-pointer flex-col gap-2 overflow-hidden rounded-l-xl bg-[#1f1f1f]/90 p-2 backdrop-blur-sm'
+                >
+                  <div className='relative'>
+                    <button className='flex h-20 w-12 items-center justify-center rounded-lg bg-[#363636] text-white transition-colors hover:bg-[#12a6a6]'>
+                      <p className='-rotate-90 text-sm font-medium text-white'>Renk Seçenekleri</p>
+                    </button>
+                  </div>
+
+                  <AnimatePresence>
+                    {isColorMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        transition={{ delay: 0.1 }}
+                        className='flex flex-col gap-2 px-2'
+                      >
+                        {product.colors.map((color, index) => (
+                          <motion.button
+                            key={index}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            transition={{ delay: index * 0.1 }}
+                            onClick={() => setSelectedColor(color === selectedColor ? null : color)}
+                            className={`w-full rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                              color === selectedColor
+                                ? 'bg-[#12a6a6] text-white'
+                                : 'bg-[#363636] text-white hover:bg-[#12a6a6]'
+                            }`}
+                          >
+                            {color.name}
+                          </motion.button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              )}
+
               <Swiper
                 spaceBetween={10}
                 thumbs={{ swiper: thumbsSwiper }}
@@ -128,27 +174,6 @@ const ProductDetail = () => {
             <p className='text-xl font-semibold text-white md:text-2xl'>
               {product?.title ? product?.title : ''}
             </p>
-
-            {product?.colors && product.colors.length > 0 && (
-              <div className='mt-6'>
-                <p className='mb-3 text-sm font-medium text-white'>Renk Seçenekleri:</p>
-                <div className='flex flex-wrap gap-3'>
-                  {product.colors.map((color, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedColor(color === selectedColor ? null : color)}
-                      className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                        color === selectedColor
-                          ? 'bg-[#12a6a6] text-white'
-                          : 'bg-[#363636] text-white hover:bg-[#12a6a6]'
-                      }`}
-                    >
-                      {color.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
 
             <div className='mt-6 md:mt-8'>
               <div className='flex w-full flex-col gap-2 sm:flex-row sm:gap-0'>

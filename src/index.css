@@ -44,3 +44,11 @@
 .thumbs-slider .swiper-slide-thumb-active img {
   border-color: #12a6a6;
 }
+
+.vertical-text {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  white-space: nowrap;
+  letter-spacing: 1px;
+}
