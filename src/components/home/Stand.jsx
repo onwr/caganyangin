@@ -63,7 +63,7 @@ const Stand = () => {
                   <img
                     src={category.image}
                     alt={category.title}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
                   />
                 </div>
                 <a href={`/urunler/${category.slug}`} className="flex">

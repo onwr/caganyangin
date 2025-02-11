@@ -108,44 +108,56 @@ const ProductDetail = () => {
                 <motion.div
                   initial={{ width: '48px' }}
                   animate={{ width: isColorMenuOpen ? '200px' : '48px' }}
-                  onClick={() => setIsColorMenuOpen(!isColorMenuOpen)}
-                  className='absolute top-1/2 -right-0 z-20 flex -translate-y-1/2 transform cursor-pointer flex-col gap-2 overflow-hidden rounded-l-xl bg-[#1f1f1f]/90 p-2 backdrop-blur-sm'
+                  className='absolute top-1/2 -right-0 z-20 flex -translate-y-1/2 transform flex-col gap-2 overflow-hidden rounded-l-xl bg-[#1f1f1f]/90 p-2 backdrop-blur-sm'
                 >
-                  <div className='relative'>
-                    <button className='flex h-20 w-12 items-center justify-center rounded-lg bg-[#363636] text-white transition-colors hover:bg-[#12a6a6]'>
-                      <p className='-rotate-90 text-sm font-medium text-white'>Renk Seçenekleri</p>
-                    </button>
-                  </div>
-
-                  <AnimatePresence>
-                    {isColorMenuOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 20 }}
-                        transition={{ delay: 0.1 }}
-                        className='flex flex-col gap-2 px-2'
+                  <div className='flex w-full'>
+                    <div className='w-1/4'>
+                      <button
+                        onClick={() => setIsColorMenuOpen(!isColorMenuOpen)}
+                        className={`relative flex items-center justify-center rounded-lg bg-[#363636] text-white transition-colors hover:bg-[#12a6a6] ${
+                          isColorMenuOpen ? 'h-full w-full' : 'h-12 w-12'
+                        }`}
                       >
-                        {product.colors.map((color, index) => (
-                          <motion.button
-                            key={index}
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 20 }}
-                            transition={{ delay: index * 0.1 }}
-                            onClick={() => setSelectedColor(color === selectedColor ? null : color)}
-                            className={`w-full rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                              color === selectedColor
-                                ? 'bg-[#12a6a6] text-white'
-                                : 'bg-[#363636] text-white hover:bg-[#12a6a6]'
-                            }`}
-                          >
-                            {color.name}
-                          </motion.button>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                        <span className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-90 transform text-sm font-medium whitespace-nowrap text-white'>
+                          Renk
+                        </span>
+                      </button>
+                    </div>
+
+                    <AnimatePresence>
+                      {isColorMenuOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 20 }}
+                          transition={{ delay: 0.1 }}
+                          className='w-3/4 pl-2'
+                        >
+                          <div className='flex flex-col gap-2'>
+                            {product.colors.map((color, index) => (
+                              <motion.button
+                                key={index}
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 20 }}
+                                transition={{ delay: index * 0.1 }}
+                                onClick={() =>
+                                  setSelectedColor(color === selectedColor ? null : color)
+                                }
+                                className={`w-full rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                                  color === selectedColor
+                                    ? 'bg-[#12a6a6] text-white'
+                                    : 'bg-[#363636] text-white hover:bg-[#12a6a6]'
+                                }`}
+                              >
+                                {color.name}
+                              </motion.button>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </motion.div>
               )}
 
