@@ -16,52 +16,51 @@ const Header = () => {
   const [services, setServices] = useState([]);
   const [fireEquipments, setFireEquipments] = useState([]);
   const [workSafety, setWorkSafety] = useState([]);
-  
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const categoriesRef = collection(db, 'categories');
         const q = query(categoriesRef, orderBy('order', 'asc'));
         const querySnapshot = await getDocs(q);
-  
+
         const categoriesData = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
         setCategories(categoriesData);
-  
+
         const icerikDoc = doc(db, 'icerik', 'hizmetlerimiz');
         const icerikSnapshot = await getDoc(icerikDoc);
-        
+
         if (icerikSnapshot.exists()) {
           const servicesData = icerikSnapshot.data().categories || [];
           setServices(servicesData);
         }
-  
+
         const fireEquipDoc = doc(db, 'icerik', 'yangin-ekipmanlari');
         const fireEquipSnapshot = await getDoc(fireEquipDoc);
-        
+
         if (fireEquipSnapshot.exists()) {
           const fireEquipData = fireEquipSnapshot.data().categories || [];
           setFireEquipments(fireEquipData);
         }
-  
+
         const workSafetyDoc = doc(db, 'icerik', 'is-guvenligi');
         const workSafetySnapshot = await getDoc(workSafetyDoc);
-        
+
         if (workSafetySnapshot.exists()) {
           const workSafetyData = workSafetySnapshot.data().categories || [];
           setWorkSafety(workSafetyData);
         }
-  
       } catch (error) {
         console.error('Veriler yüklenirken hata:', error);
       }
     };
-  
+
     fetchData();
   }, []);
-  
+
   const menuItems = [
     { title: 'Anasayfa', link: '/' },
     { title: 'Hakkımızda', link: '/hakkimizda' },
@@ -76,7 +75,7 @@ const Header = () => {
       })),
     },
     {
-      title: 'Söndürme Sistemleri',
+      title: 'Yangın Ekipmanları',
       link: '#',
       submenu: categories.map((category) => ({
         title: category.title,
@@ -85,7 +84,7 @@ const Header = () => {
       })),
     },
     {
-      title: 'Yangın Ekipmanları',
+      title: 'Söndürme Sistemleri',
       link: '#',
       submenu: fireEquipments.map((item) => ({
         title: item.title,
@@ -170,7 +169,7 @@ const Header = () => {
                         </Link>
                       ))}
                     </div>
-                    <div className='relative w-1/2 h-[40vh] overflow-hidden rounded-l-xl bg-[#1f1f1f]'>
+                    <div className='relative h-[40vh] w-1/2 overflow-hidden rounded-l-xl bg-[#1f1f1f]'>
                       <AnimatePresence mode='wait'>
                         <motion.img
                           key={hoveredSubItem || (item.submenu[0] && item.submenu[0].image)}

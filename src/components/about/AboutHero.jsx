@@ -20,14 +20,7 @@ const AboutHero = () => {
     <div className='bg-[#1f1f1f] pt-20 pb-5'>
       <div className='container mx-auto px-4'>
         <div className='flex flex-col gap-10 lg:flex-row lg:items-start'>
-          <div className='w-full lg:w-1/2'>
-            <img
-              src='/images/about/about.jpg'
-              alt='Hakkımızda'
-              className='h-full w-full rounded-lg object-cover'
-            />
-          </div>
-          <div className='w-full lg:w-1/2'>
+          <div className='w-full'>
             <p className='text-base font-medium text-[#12a6a6]'>Hakkımızda</p>
             <p
               className='mt-5 text-base leading-relaxed text-white'

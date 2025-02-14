@@ -21,7 +21,7 @@ const Dashboard = () => {
   const fetchSlides = async () => {
     try {
       const snapshot = await getDocs(collection(db, 'slider'));
-      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const data = snapshot.docs.map((doc) => ({ docId: doc.id, ...doc.data() }));
       setSlides(data);
     } catch (error) {
       console.error('Slider verileri çekilirken hata:', error);
@@ -81,6 +81,8 @@ const Dashboard = () => {
     if (window.confirm("Bu slider'ı silmek istediğinize emin misiniz?")) {
       try {
         await deleteDoc(doc(db, 'slider', slideId));
+        console.log(slideId);
+
         fetchSlides();
       } catch (error) {
         console.error('Slide silinirken hata:', error);
@@ -169,7 +171,7 @@ const Dashboard = () => {
           <div className='space-y-4'>
             {slides.map((slide) => (
               <motion.div
-                key={slide.id}
+                key={slide.docId}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className='flex items-center justify-between rounded-lg border border-gray-200 p-4 transition-shadow hover:shadow-md'
@@ -187,7 +189,7 @@ const Dashboard = () => {
                 </div>
 
                 <motion.button
-                  onClick={() => handleDelete(slide.id)}
+                  onClick={() => handleDelete(slide.docId)}
                   className='rounded-lg p-2 text-red-600 hover:bg-red-50'
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}

@@ -54,7 +54,10 @@ const About = () => {
     <div>
       <Header />
       <AboutHero />
-      <Content baslik={"Belgelerimiz"} aciklama={"Çağan Yangın Sistemleri ve Güvenlik Ekipmanları"} />
+      <Content
+        baslik={'Belgelerimiz'}
+        aciklama={'Çağan Yangın Sistemleri ve Güvenlik Ekipmanları'}
+      />
       <CertificateList />
       <Content
         baslik={'REFERANSLARIMIZ'}

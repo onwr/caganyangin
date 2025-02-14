@@ -21,13 +21,15 @@ const About = () => {
       className='relative bg-cover bg-fixed bg-center bg-no-repeat'
       style={{
         backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('/images/home/hakkimizda.jpg')`,
-        opacity: '0.8',
       }}
     >
       <div className='container mx-auto px-4 py-16 text-center'>
         <h1 className='mb-3 text-sm font-bold text-[#12a1a1]'>HAKKIMIZDA</h1>
         <p className='prose max-w-none text-2xl text-white'>Çağan Yangın Sistemleri Hakkında</p>
-        <div className='mt-5 text-base leading-relaxed text-white' dangerouslySetInnerHTML={{ __html: hakkimda?.metin }}></div>
+        <div
+          className='mt-5 text-base leading-relaxed text-white'
+          dangerouslySetInnerHTML={{ __html: hakkimda?.metin }}
+        ></div>
         <a
           href='/hakkimizda'
           target='_blank'
