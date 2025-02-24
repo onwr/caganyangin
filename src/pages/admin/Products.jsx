@@ -37,12 +37,25 @@ const Products = () => {
     colors: [],
   });
 
+  const [subProductForm, setSubProductForm] = useState({
+    title: '',
+    description: '',
+    categorySlug: '',
+    parentId: '',
+    parentTitle: '',
+    images: [],
+    olcuvekodlar: [],
+    features: [],
+    colors: [],
+    isSubProduct: true,
+  });
+
   const [editingCategory, setEditingCategory] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
 
   const config = useMemo(
     () => ({
-      readonly: false, // all options from https://xdsoft.net/jodit/docs/,
+      readonly: false,
       placeholder: 'Detaylı Açıklama...',
     }),
     []
@@ -204,6 +217,73 @@ const Products = () => {
     }
   };
 
+  const handleSubProductSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const subProductData = {
+        ...subProductForm,
+        createdAt: serverTimestamp(),
+      };
+
+      if (editingProduct) {
+        await updateDoc(doc(db, 'products', editingProduct.id), subProductData);
+      } else {
+        await addDoc(collection(db, 'products'), subProductData);
+      }
+      await fetchProducts();
+      setSubProductForm({
+        title: '',
+        description: '',
+        categorySlug: '',
+        parentId: '',
+        parentTitle: '',
+        images: [],
+        olcuvekodlar: [],
+        features: [],
+        colors: [],
+        isSubProduct: true,
+      });
+      setEditingProduct(null);
+    } catch (error) {
+      console.error('Alt ürün kaydetme hatası:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubProductImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Dosya boyutu 2MB'dan küçük olmalıdır!");
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const imageUrl = await uploadImage(file);
+      if (imageUrl) {
+        setSubProductForm((prev) => ({
+          ...prev,
+          images: [...prev.images, imageUrl],
+        }));
+      }
+    } catch (error) {
+      console.error('Resim yükleme hatası:', error);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleRemoveSubProductImage = (index) => {
+    setSubProductForm((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }));
+  };
+
   const handleDeleteProduct = async (productId) => {
     if (!window.confirm('Bu ürünü silmek istediğinizden emin misiniz?')) return;
     setLoading(true);
@@ -323,6 +403,14 @@ const Products = () => {
         >
           Ürünler
         </button>
+        <button
+          onClick={() => setActiveTab('subproducts')}
+          className={`rounded-lg px-4 py-2 ${
+            activeTab === 'subproducts' ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'
+          }`}
+        >
+          Alt Ürünler
+        </button>
       </div>
 
       <div className='grid grid-cols-1 gap-8 lg:grid-cols-2'>
@@ -421,6 +509,182 @@ const Products = () => {
                         slug: '',
                         image: '',
                         order: 0,
+                      });
+                    }}
+                    className='rounded-lg bg-gray-100 px-4 py-2 text-gray-600 hover:bg-gray-200'
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    İptal
+                  </motion.button>
+                )}
+              </div>
+            </form>
+          </div>
+        ) : activeTab === 'subproducts' ? (
+          <div className='rounded-lg bg-white p-6 shadow-md'>
+            <h2 className='mb-6 text-xl font-semibold'>
+              {editingProduct ? 'Alt Ürün Düzenle' : 'Yeni Alt Ürün Ekle'}
+            </h2>
+            <form onSubmit={handleSubProductSubmit} className='space-y-4'>
+              <div>
+                <label className='mb-1 block text-sm font-medium'>Kategori</label>
+                <select
+                  value={subProductForm.categorySlug}
+                  onChange={(e) => {
+                    setSubProductForm({
+                      ...subProductForm,
+                      categorySlug: e.target.value,
+                      parentId: '',
+                      parentTitle: '',
+                    });
+                  }}
+                  className='w-full rounded border p-2'
+                  required
+                >
+                  <option value=''>Kategori Seçin</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.slug}>
+                      {category.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {subProductForm.categorySlug && (
+                <div>
+                  <label className='mb-1 block text-sm font-medium'>Ana Ürün</label>
+                  <select
+                    value={subProductForm.parentId}
+                    onChange={(e) => {
+                      const selectedProduct = products.find((p) => p.id === e.target.value);
+                      setSubProductForm({
+                        ...subProductForm,
+                        parentId: e.target.value,
+                        parentTitle: selectedProduct ? selectedProduct.title : '',
+                      });
+                    }}
+                    className='w-full rounded border p-2'
+                    required
+                  >
+                    <option value=''>Ana Ürün Seçin</option>
+                    {products
+                      .filter(
+                        (p) => p.categorySlug === subProductForm.categorySlug && !p.isSubProduct
+                      )
+                      .map((product) => (
+                        <option key={product.id} value={product.id}>
+                          {product.title}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              )}
+
+              <div>
+                <label className='mb-1 block text-sm font-medium'>Alt Ürün Adı</label>
+                <input
+                  type='text'
+                  value={subProductForm.title}
+                  onChange={(e) => setSubProductForm({ ...subProductForm, title: e.target.value })}
+                  className='w-full rounded border p-2'
+                  required
+                />
+              </div>
+
+              <div>
+                <label className='mb-1 block text-sm font-medium'>Açıklama</label>
+                <JoditEditor
+                  value={subProductForm.description}
+                  config={config}
+                  onBlur={(newContent) =>
+                    setSubProductForm({ ...subProductForm, description: newContent })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className='mb-1 block text-sm font-medium'>Resimler</label>
+                <div className='flex flex-wrap gap-4'>
+                  {subProductForm.images.map((image, index) => (
+                    <div key={index} className='relative'>
+                      <img src={image} alt='' className='h-20 w-20 rounded object-cover' />
+                      <button
+                        type='button'
+                        onClick={() => handleRemoveSubProductImage(index)}
+                        className='absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600'
+                      >
+                        <svg className='h-4 w-4' viewBox='0 0 20 20' fill='currentColor'>
+                          <path
+                            fillRule='evenodd'
+                            d='M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z'
+                            clipRule='evenodd'
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                  <div className='relative'>
+                    <input
+                      type='file'
+                      accept='image/*'
+                      onChange={handleSubProductImageUpload}
+                      className='absolute inset-0 cursor-pointer opacity-0'
+                    />
+                    <button
+                      type='button'
+                      className='flex h-20 w-20 items-center justify-center rounded border-2 border-dashed border-gray-300 hover:border-gray-400'
+                    >
+                      <svg
+                        className='h-8 w-8 text-gray-400'
+                        viewBox='0 0 20 20'
+                        fill='currentColor'
+                      >
+                        <path
+                          fillRule='evenodd'
+                          d='M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z'
+                          clipRule='evenodd'
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className='flex gap-2'>
+                <motion.button
+                  type='submit'
+                  disabled={loading}
+                  className='flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700'
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {loading ? (
+                    'İşleniyor...'
+                  ) : (
+                    <>
+                      {editingProduct ? <BsPencil /> : <BsPlus />}
+                      {editingProduct ? 'Güncelle' : 'Ekle'}
+                    </>
+                  )}
+                </motion.button>
+
+                {editingProduct && (
+                  <motion.button
+                    type='button'
+                    onClick={() => {
+                      setEditingProduct(null);
+                      setSubProductForm({
+                        title: '',
+                        description: '',
+                        categorySlug: '',
+                        parentId: '',
+                        parentTitle: '',
+                        images: [],
+                        olcuvekodlar: [],
+                        features: [],
+                        colors: [],
+                        isSubProduct: true,
                       });
                     }}
                     className='rounded-lg bg-gray-100 px-4 py-2 text-gray-600 hover:bg-gray-200'
@@ -704,94 +968,157 @@ const Products = () => {
         <div className='rounded-lg bg-white p-6 shadow-md'>
           <h2 className='mb-6 text-xl font-semibold'>Liste</h2>
           <div className='space-y-4'>
-            {activeTab === 'categories'
-              ? categories.map((category, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className='flex items-center justify-between rounded-lg border p-4 hover:shadow-md'
-                  >
-                    <div className='flex items-center gap-4'>
-                      {category.image && (
-                        <img
-                          src={category.image}
-                          alt={category.title}
-                          className='h-12 w-12 object-contain'
-                        />
-                      )}
-                      <div>
-                        <h3 className='font-medium'>{category.title}</h3>
-                      </div>
+            {activeTab === 'categories' ? (
+              categories.map((category, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className='flex items-center justify-between rounded-lg border p-4 hover:shadow-md'
+                >
+                  <div className='flex items-center gap-4'>
+                    {category.image && (
+                      <img
+                        src={category.image}
+                        alt={category.title}
+                        className='h-12 w-12 object-contain'
+                      />
+                    )}
+                    <div>
+                      <h3 className='font-medium'>{category.title}</h3>
                     </div>
+                  </div>
 
-                    <div className='flex gap-2'>
-                      <motion.button
-                        onClick={() => {
-                          setEditingCategory(category);
-                          setCategoryForm(category);
-                        }}
-                        className='rounded-lg p-2 text-blue-600 hover:bg-blue-50'
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                      >
-                        <BsPencil />
-                      </motion.button>
-                      <motion.button
-                        onClick={() => handleDeleteCategory(category.id)}
-                        className='rounded-lg p-2 text-red-600 hover:bg-red-50'
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                      >
-                        <BsTrash />
-                      </motion.button>
-                    </div>
-                  </motion.div>
-                ))
-              : products.map((product, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className='flex items-center justify-between rounded-lg border p-4 hover:shadow-md'
-                  >
-                    <div className='flex items-center gap-4'>
-                      {product.images?.[0] && (
-                        <img
-                          src={product.images[0]}
-                          alt={product.title}
-                          className='h-12 w-12 object-contain'
-                        />
-                      )}
-                      <div>
-                        <h3 className='font-medium'>{product.title}</h3>
-                        <p className='text-sm text-gray-500'>{product.categorySlug}</p>
-                      </div>
-                    </div>
+                  <div className='flex gap-2'>
+                    <motion.button
+                      onClick={() => {
+                        setEditingCategory(category);
+                        setCategoryForm(category);
+                      }}
+                      className='rounded-lg p-2 text-blue-600 hover:bg-blue-50'
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <BsPencil />
+                    </motion.button>
+                    <motion.button
+                      onClick={() => handleDeleteCategory(category.id)}
+                      className='rounded-lg p-2 text-red-600 hover:bg-red-50'
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <BsTrash />
+                    </motion.button>
+                  </div>
+                </motion.div>
+              ))
+            ) : activeTab === 'subproducts' ? (
+              <div className='space-y-6'>
+                {products
+                  .filter((p) => !p.isSubProduct)
+                  .map((parentProduct) => {
+                    const subProducts = products.filter(
+                      (p) => p.isSubProduct && p.parentId === parentProduct.id
+                    );
 
-                    <div className='flex gap-2'>
-                      <motion.button
-                        onClick={() => {
-                          setEditingProduct(product);
-                          setProductForm(product);
-                        }}
-                        className='rounded-lg p-2 text-blue-600 hover:bg-blue-50'
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                      >
-                        <BsPencil />
-                      </motion.button>
-                      <motion.button
-                        onClick={() => handleDeleteProduct(product.id)}
-                        className='rounded-lg p-2 text-red-600 hover:bg-red-50'
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                      >
-                        <BsTrash />
-                      </motion.button>
+                    return (
+                      <div key={parentProduct.id} className='space-y-2'>
+                        <div className='rounded-lg border bg-gray-50 p-4'>
+                          <h3 className='font-medium'>{parentProduct.title}</h3>
+                        </div>
+                        <div className='ml-8 space-y-2'>
+                          {subProducts.map((subProduct) => (
+                            <motion.div
+                              key={subProduct.id}
+                              className='flex items-center justify-between rounded-lg border p-4 hover:shadow-md'
+                            >
+                              <div className='flex items-center gap-4'>
+                                {subProduct.images?.[0] && (
+                                  <img
+                                    src={subProduct.images[0]}
+                                    alt={subProduct.title}
+                                    className='h-12 w-12 object-contain'
+                                  />
+                                )}
+                                <div>
+                                  <h4 className='font-medium'>{subProduct.title}</h4>
+                                </div>
+                              </div>
+
+                              <div className='flex gap-2'>
+                                <motion.button
+                                  onClick={() => {
+                                    setEditingProduct(subProduct);
+                                    setSubProductForm(subProduct);
+                                  }}
+                                  className='rounded-lg p-2 text-blue-600 hover:bg-blue-50'
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                >
+                                  <BsPencil />
+                                </motion.button>
+                                <motion.button
+                                  onClick={() => handleDeleteProduct(subProduct.id)}
+                                  className='rounded-lg p-2 text-red-600 hover:bg-red-50'
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                >
+                                  <BsTrash />
+                                </motion.button>
+                              </div>
+                            </motion.div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            ) : (
+              products.map((product, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className='flex items-center justify-between rounded-lg border p-4 hover:shadow-md'
+                >
+                  <div className='flex items-center gap-4'>
+                    {product.images?.[0] && (
+                      <img
+                        src={product.images[0]}
+                        alt={product.title}
+                        className='h-12 w-12 object-contain'
+                      />
+                    )}
+                    <div>
+                      <h3 className='font-medium'>{product.title}</h3>
+                      <p className='text-sm text-gray-500'>{product.categorySlug}</p>
                     </div>
-                  </motion.div>
-                ))}
+                  </div>
+
+                  <div className='flex gap-2'>
+                    <motion.button
+                      onClick={() => {
+                        setEditingProduct(product);
+                        setProductForm(product);
+                      }}
+                      className='rounded-lg p-2 text-blue-600 hover:bg-blue-50'
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <BsPencil />
+                    </motion.button>
+                    <motion.button
+                      onClick={() => handleDeleteProduct(product.id)}
+                      className='rounded-lg p-2 text-red-600 hover:bg-red-50'
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <BsTrash />
+                    </motion.button>
+                  </div>
+                </motion.div>
+              ))
+            )}
           </div>
         </div>
       </div>

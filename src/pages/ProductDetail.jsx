@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
 import { db } from 'src/db/Firebase';
 import { ArrowRight, Home, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -23,6 +23,8 @@ const ProductDetail = () => {
   const [selectedColor, setSelectedColor] = useState(null);
   const [currentImages, setCurrentImages] = useState([]);
   const [isColorMenuOpen, setIsColorMenuOpen] = useState(false);
+  const [parentProduct, setParentProduct] = useState(null);
+  const [subProducts, setSubProducts] = useState([]);
 
   useEffect(() => {
     const fetchProductAndCategory = async () => {
@@ -38,9 +40,28 @@ const ProductDetail = () => {
           setProduct(productData);
           setCurrentImages(productData.images || []);
 
-          // İlk renk varsa onu seç
-          if (productData.colors && productData.colors.length > 0) {
-            setSelectedColor(productData.colors[0]);
+          // Fetch parent product if this is a sub-product
+          if (productData.isSubProduct && productData.parentId) {
+            const parentRef = doc(db, 'products', productData.parentId);
+            const parentSnap = await getDoc(parentRef);
+            if (parentSnap.exists()) {
+              setParentProduct({
+                id: parentSnap.id,
+                ...parentSnap.data(),
+              });
+            }
+          }
+
+          // Fetch sub-products if this is a parent product
+          if (!productData.isSubProduct) {
+            const subProductsRef = collection(db, 'products');
+            const q = query(subProductsRef, where('parentId', '==', productData.id));
+            const subProductsSnap = await getDocs(q);
+            const subProductsData = subProductsSnap.docs.map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            }));
+            setSubProducts(subProductsData);
           }
 
           const categoryRef = collection(db, 'categories');
@@ -287,6 +308,42 @@ const ProductDetail = () => {
           </div>
         </div>
       </div>
+
+      {!product?.isSubProduct && subProducts.length > 0 && (
+        <div className='bg-[#1a1a1a]'>
+          <h3 className='mb-4 pt-5 text-center text-2xl font-semibold text-white'>Alt Ürünler</h3>
+          <div className='grid grid-cols-1 gap-4 p-5 md:grid-cols-2 lg:grid-cols-3'>
+            {subProducts.map((subProduct) => (
+              <Link
+                key={subProduct.id}
+                to={`/urun/${subProduct.id}`}
+                className='rounded-lg bg-[#1f1f1f] p-4 transition-colors hover:bg-[#363636]'
+              >
+                <div className='mb-3 aspect-square overflow-hidden rounded-lg'>
+                  <img
+                    src={subProduct.images[0]}
+                    alt={subProduct.title}
+                    className='h-full w-full object-contain'
+                  />
+                </div>
+                <h4 className='font-medium text-white'>{subProduct.title}</h4>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {product?.isSubProduct && parentProduct && (
+        <div className='bg-[#1a1a1a] p-4 pt-4'>
+          <p className='text-sm text-[#aba9a9]'>Ana Ürün:</p>
+          <Link
+            to={`/urun/${parentProduct.id}`}
+            className='text-[#12a6a6] transition-colors hover:text-[#ed9128]'
+          >
+            {parentProduct.title}
+          </Link>
+        </div>
+      )}
 
       <Footer />
     </div>
