@@ -16,6 +16,9 @@ const Header = () => {
   const [services, setServices] = useState([]);
   const [fireEquipments, setFireEquipments] = useState([]);
   const [workSafety, setWorkSafety] = useState([]);
+  const [hoveredProduct, setHoveredProduct] = useState(null);
+  const [hoveredCategory, setHoveredCategory] = useState(null);
+  const [expandedMobileCategory, setExpandedMobileCategory] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -28,7 +31,25 @@ const Header = () => {
           id: doc.id,
           ...doc.data(),
         }));
-        setCategories(categoriesData);
+
+        const productsRef = collection(db, 'products');
+        const productsSnapshot = await getDocs(productsRef);
+        const allProducts = productsSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        const categoriesWithProducts = categoriesData.map((category) => ({
+          ...category,
+          products: allProducts
+            .filter((product) => product.categorySlug === category.slug && !product.isSubProduct)
+            .map((product) => ({
+              ...product,
+              subProducts: allProducts.filter((p) => p.parentId === product.id && p.isSubProduct),
+            })),
+        }));
+
+        setCategories(categoriesWithProducts);
 
         const icerikDoc = doc(db, 'icerik', 'hizmetlerimiz');
         const icerikSnapshot = await getDoc(icerikDoc);
@@ -81,6 +102,7 @@ const Header = () => {
         title: category.title,
         link: `/urunler/${category.slug}`,
         image: category.image,
+        products: category.products,
       })),
     },
     {
@@ -153,44 +175,77 @@ const Header = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 20 }}
-                    className='absolute left-0 z-50 mt-10 flex w-[600px] rounded-lg bg-[#191919] py-4'
+                    className='absolute left-0 z-50 mt-10 flex w-[800px] rounded-lg bg-[#191919] py-4'
                   >
-                    <div className='w-1/2'>
+                    {/* Left side - Category titles */}
+                    <div className='max-h-[60vh] w-1/2 overflow-y-auto'>
                       {item.submenu.map((subItem) => (
-                        <Link
-                          key={subItem.title}
-                          to={subItem.link}
-                          className='block px-6 py-2 text-white hover:bg-gray-50 hover:text-[#ed9128]'
-                          onMouseEnter={() => setHoveredSubItem(subItem.image)}
-                          onMouseLeave={() => setHoveredSubItem(null)}
-                          onClick={() => setActiveDropdown('')}
-                        >
-                          {subItem.title}
-                        </Link>
+                        <div key={subItem.title} className='category-group'>
+                          <Link
+                            to={subItem.link}
+                            className='block px-6 py-2 font-medium text-white hover:text-[#ed9128]'
+                            onMouseEnter={() => {
+                              setHoveredSubItem(subItem);
+                              setHoveredCategory(subItem.title);
+                            }}
+                            onClick={() => setActiveDropdown('')}
+                          >
+                            {subItem.title}
+                          </Link>
+                        </div>
                       ))}
                     </div>
-                    <div className='relative h-[40vh] w-1/2 overflow-hidden rounded-l-xl bg-[#1f1f1f]'>
+
+                    <div className='relative h-[60vh] w-1/2 overflow-hidden rounded-l-xl bg-[#1f1f1f]'>
+                      <div className='absolute inset-0 z-10'>
+                        <AnimatePresence mode='wait'>
+                          {hoveredCategory && hoveredSubItem?.products && (
+                            <motion.div
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              className='absolute top-4 right-4 left-4 max-h-[calc(60vh-32px)] overflow-y-auto rounded-lg bg-[#191919]/90 p-4 backdrop-blur-sm'
+                            >
+                              <h3 className='mb-3 text-lg font-medium text-white'>
+                                {hoveredCategory}
+                              </h3>
+                              {hoveredSubItem.products?.map((product) => (
+                                <div key={product.id} className='mb-2'>
+                                  <Link
+                                    to={`/urun/${product.id}`}
+                                    className='block text-gray-300 hover:text-[#ed9128]'
+                                    onMouseEnter={() =>
+                                      setHoveredSubItem({
+                                        ...hoveredSubItem,
+                                        image: product.images?.[0] || hoveredSubItem.image,
+                                      })
+                                    }
+                                  >
+                                    {product.title}
+                                  </Link>
+                                </div>
+                              ))}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+
+                      {/* Background image */}
                       <AnimatePresence mode='wait'>
                         <motion.img
-                          key={hoveredSubItem || (item.submenu[0] && item.submenu[0].image)}
-                          src={hoveredSubItem || (item.submenu[0] && item.submenu[0].image)}
-                          alt={item.title}
+                          key={hoveredSubItem?.image || (item.submenu[0] && item.submenu[0].image)}
+                          src={hoveredSubItem?.image || (item.submenu[0] && item.submenu[0].image)}
+                          alt=''
                           initial={{ opacity: 0, scale: 1.1 }}
                           animate={{
                             opacity: 1,
                             scale: 1,
-                            transition: {
-                              duration: 0.3,
-                              ease: 'easeOut',
-                            },
+                            transition: { duration: 0.3, ease: 'easeOut' },
                           }}
                           exit={{
                             opacity: 0,
                             scale: 0.95,
-                            transition: {
-                              duration: 0.2,
-                              ease: 'easeIn',
-                            },
+                            transition: { duration: 0.2, ease: 'easeIn' },
                           }}
                           className='h-full w-full rounded-l-2xl object-cover'
                         />
@@ -273,17 +328,53 @@ const Header = () => {
                       className='bg-gray-50'
                     >
                       {item.submenu.map((subItem) => (
-                        <Link
-                          key={subItem.title}
-                          to={subItem.link}
-                          className='block px-8 py-2 text-[#595958] hover:text-[#ed9128]'
-                          onClick={() => {
-                            setIsOpen(false);
-                            setActiveDropdown('');
-                          }}
-                        >
-                          {subItem.title}
-                        </Link>
+                        <div key={subItem.title}>
+                          <Link
+                            to={subItem.link}
+                            className='block px-8 py-2 text-[#595958] hover:text-[#ed9128]'
+                            onClick={() => {
+                              setIsOpen(false);
+                              setActiveDropdown('');
+                            }}
+                          >
+                            {subItem.title}
+                          </Link>
+                          {subItem.products && (
+                            <div className='ml-4 border-l border-gray-200'>
+                              {subItem.products.map((product) => (
+                                <div key={product.id}>
+                                  <Link
+                                    to={`/urun/${product.id}`}
+                                    className='block px-8 py-1.5 text-sm text-[#595958] hover:text-[#ed9128]'
+                                    onClick={() => {
+                                      setIsOpen(false);
+                                      setActiveDropdown('');
+                                    }}
+                                  >
+                                    {product.title}
+                                  </Link>
+                                  {product.subProducts?.length > 0 && (
+                                    <div className='ml-4 border-l border-gray-200'>
+                                      {product.subProducts.map((subProduct) => (
+                                        <Link
+                                          key={subProduct.id}
+                                          to={`/urun/${subProduct.id}`}
+                                          className='block px-8 py-1 text-xs text-[#595958] hover:text-[#ed9128]'
+                                          onClick={() => {
+                                            setIsOpen(false);
+                                            setActiveDropdown('');
+                                          }}
+                                        >
+                                          • {subProduct.title}
+                                        </Link>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       ))}
                     </motion.div>
                   )}
