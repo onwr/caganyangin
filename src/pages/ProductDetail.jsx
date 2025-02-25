@@ -120,6 +120,18 @@ const ProductDetail = () => {
           </p>
         </div>
       </div>
+      
+      {product?.isSubProduct && parentProduct && (
+        <div className='bg-[#1a1a1a] flex flex-col items-center justify-center gap-0.5 border-t border-white/40 p-4 pt-4'>
+          <p className='text-sm text-[#aba9a9]'>Ana Ürün</p>
+          <Link
+            to={`/urun/${parentProduct.id}`}
+            className='text-[#12a6a6] transition-colors hover:text-[#ed9128]'
+          >
+            {parentProduct.title}
+          </Link>
+        </div>
+      )}
 
       <div className='bg-[#1f1f1f]'>
         <div className='container mx-auto flex flex-col gap-10 px-4 py-6 lg:flex-row'>
@@ -317,7 +329,7 @@ const ProductDetail = () => {
               <Link
                 key={subProduct.id}
                 to={`/urun/${subProduct.id}`}
-                className='rounded-lg bg-[#1f1f1f] p-4 transition-colors hover:bg-[#363636]'
+                className='rounded-lg bg-[#1f1f1f] border border-white/40 p-4 transition-colors hover:bg-[#363636]'
               >
                 <div className='mb-3 aspect-square overflow-hidden rounded-lg'>
                   <img
@@ -333,17 +345,6 @@ const ProductDetail = () => {
         </div>
       )}
 
-      {product?.isSubProduct && parentProduct && (
-        <div className='bg-[#1a1a1a] p-4 pt-4'>
-          <p className='text-sm text-[#aba9a9]'>Ana Ürün:</p>
-          <Link
-            to={`/urun/${parentProduct.id}`}
-            className='text-[#12a6a6] transition-colors hover:text-[#ed9128]'
-          >
-            {parentProduct.title}
-          </Link>
-        </div>
-      )}
 
       <Footer />
     </div>

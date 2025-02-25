@@ -19,25 +19,26 @@ const CategoryDetail = () => {
         const categoryRef = collection(db, 'categories');
         const categoryQuery = query(categoryRef, where('slug', '==', slug));
         const categorySnapshot = await getDocs(categoryQuery);
-
+  
         if (!categorySnapshot.empty) {
           setCategory({
             id: categorySnapshot.docs[0].id,
             ...categorySnapshot.docs[0].data(),
           });
         }
-
+  
         const productsRef = collection(db, 'products');
         const productsQuery = query(productsRef, where('categorySlug', '==', slug));
         const productsSnapshot = await getDocs(productsQuery);
-
+  
         const productsData = productsSnapshot.docs
           .map((doc) => ({
             docId: doc.id,
             ...doc.data(),
           }))
+          .filter((product) => !product.isSubProduct) // isSubProduct === true olanları filtreleme
           .sort((a, b) => b.createdAt?.toMillis() - a.createdAt?.toMillis());
-
+  
         setProducts(productsData);
       } catch (error) {
         console.error('Veriler yüklenirken hata:', error);
@@ -45,9 +46,10 @@ const CategoryDetail = () => {
         setLoading(false);
       }
     };
-
+  
     fetchCategoryAndProducts();
   }, [slug]);
+  
 
   return (
     <div>
