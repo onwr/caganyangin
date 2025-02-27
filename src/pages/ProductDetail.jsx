@@ -335,7 +335,7 @@ const ProductDetail = () => {
                   <img
                     src={subProduct.images[0]}
                     alt={subProduct.title}
-                    className='h-full w-full object-contain'
+                    className='w-40 object-contain'
                   />
                 </div>
                 <h4 className='font-medium text-white'>{subProduct.title}</h4>
