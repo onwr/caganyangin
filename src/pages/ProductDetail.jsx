@@ -331,19 +331,11 @@ const ProductDetail = () => {
                 to={`/urun/${subProduct.id}`}
                 className='rounded-lg border border-white/40 bg-[#1f1f1f] p-4 transition-colors hover:bg-[#363636]'
               >
-<<<<<<< HEAD
                 <div className='mb-3 overflow-hidden rounded-lg'>
                   <img
                     src={subProduct.images[0]}
                     alt={subProduct.title}
                     className='mx-auto w-60 rounded-2xl object-contain'
-=======
-                <div className='mb-3 aspect-square h-32 overflow-hidden rounded-lg'>
-                  <img
-                    src={subProduct.images[0]}
-                    alt={subProduct.title}
-                    className='h-32 w-auto object-contain'
->>>>>>> a8ccac77944f1a641e1f8c5e0b076ba5003e18df
                   />
                 </div>
                 <h4 className='text-center font-medium text-white'>{subProduct.title}</h4>
