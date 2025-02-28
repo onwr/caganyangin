@@ -120,9 +120,9 @@ const ProductDetail = () => {
           </p>
         </div>
       </div>
-      
+
       {product?.isSubProduct && parentProduct && (
-        <div className='bg-[#1a1a1a] flex flex-col items-center justify-center gap-0.5 border-t border-white/40 p-4 pt-4'>
+        <div className='flex flex-col items-center justify-center gap-0.5 border-t border-white/40 bg-[#1a1a1a] p-4 pt-4'>
           <p className='text-sm text-[#aba9a9]'>Ana Ürün</p>
           <Link
             to={`/urun/${parentProduct.id}`}
@@ -329,22 +329,21 @@ const ProductDetail = () => {
               <Link
                 key={subProduct.id}
                 to={`/urun/${subProduct.id}`}
-                className='rounded-lg bg-[#1f1f1f] border border-white/40 p-4 transition-colors hover:bg-[#363636]'
+                className='rounded-lg border border-white/40 bg-[#1f1f1f] p-4 transition-colors hover:bg-[#363636]'
               >
-                <div className='mb-3 aspect-square overflow-hidden rounded-lg'>
+                <div className='mb-3 overflow-hidden rounded-lg'>
                   <img
                     src={subProduct.images[0]}
                     alt={subProduct.title}
-                    className='h-full w-full object-contain'
+                    className='mx-auto w-60 rounded-2xl object-contain'
                   />
                 </div>
-                <h4 className='font-medium text-white'>{subProduct.title}</h4>
+                <h4 className='text-center font-medium text-white'>{subProduct.title}</h4>
               </Link>
             ))}
           </div>
         </div>
       )}
-
 
       <Footer />
     </div>
