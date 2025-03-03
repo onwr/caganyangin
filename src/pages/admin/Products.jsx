@@ -107,20 +107,39 @@ const Products = () => {
       if (imageUrl) {
         if (isProduct) {
           if (colorIndex !== null) {
-            const newColors = [...productForm.colors];
-            newColors[colorIndex] = {
-              ...newColors[colorIndex],
-              images: [...newColors[colorIndex].images, imageUrl],
-            };
-            setProductForm((prev) => ({
-              ...prev,
-              colors: newColors,
-            }));
+            if (activeTab === 'subproducts') {
+              const newColors = [...subProductForm.colors];
+              newColors[colorIndex] = {
+                ...newColors[colorIndex],
+                images: [...(newColors[colorIndex].images || []), imageUrl],
+              };
+              setSubProductForm((prev) => ({
+                ...prev,
+                colors: newColors,
+              }));
+            } else {
+              const newColors = [...productForm.colors];
+              newColors[colorIndex] = {
+                ...newColors[colorIndex],
+                images: [...(newColors[colorIndex].images || []), imageUrl],
+              };
+              setProductForm((prev) => ({
+                ...prev,
+                colors: newColors,
+              }));
+            }
           } else {
-            setProductForm((prev) => ({
-              ...prev,
-              images: [...prev.images, imageUrl],
-            }));
+            if (activeTab === 'subproducts') {
+              setSubProductForm((prev) => ({
+                ...prev,
+                images: [...prev.images, imageUrl],
+              }));
+            } else {
+              setProductForm((prev) => ({
+                ...prev,
+                images: [...prev.images, imageUrl],
+              }));
+            }
           }
         } else {
           setCategoryForm((prev) => ({ ...prev, image: imageUrl }));
@@ -382,6 +401,96 @@ const Products = () => {
     }));
   };
 
+  const handleSubProductOlcuKodChange = (index, field, value) => {
+    const newOlcuKodlar = [...subProductForm.olcuvekodlar];
+    newOlcuKodlar[index] = {
+      ...newOlcuKodlar[index],
+      [field]: value,
+    };
+    setSubProductForm((prev) => ({
+      ...prev,
+      olcuvekodlar: newOlcuKodlar,
+    }));
+  };
+
+  const handleAddSubProductOlcuKod = () => {
+    setSubProductForm((prev) => ({
+      ...prev,
+      olcuvekodlar: [...prev.olcuvekodlar, { kod: '', uzunluk: '', genislik: '' }],
+    }));
+  };
+
+  const handleRemoveSubProductOlcuKod = (index) => {
+    setSubProductForm((prev) => ({
+      ...prev,
+      olcuvekodlar: prev.olcuvekodlar.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleAddSubProductColor = () => {
+    setSubProductForm((prev) => ({
+      ...prev,
+      colors: [...prev.colors, { name: '', images: [] }],
+    }));
+  };
+
+  const handleSubProductColorChange = (index, value) => {
+    const newColors = [...subProductForm.colors];
+    newColors[index] = { ...newColors[index], name: value };
+    setSubProductForm((prev) => ({
+      ...prev,
+      colors: newColors,
+    }));
+  };
+
+  const handleRemoveSubProductColor = (colorIndex) => {
+    setSubProductForm((prev) => ({
+      ...prev,
+      colors: prev.colors.filter((_, index) => index !== colorIndex),
+    }));
+  };
+
+  const handleRemoveSubProductColorImage = (colorIndex, imageIndex) => {
+    const newColors = [...subProductForm.colors];
+    newColors[colorIndex].images = newColors[colorIndex].images.filter(
+      (_, index) => index !== imageIndex
+    );
+    setSubProductForm((prev) => ({
+      ...prev,
+      colors: newColors,
+    }));
+  };
+
+  const handleSubProductColorImageUpload = async (e, colorIndex) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Dosya boyutu 2MB'dan küçük olmalıdır!");
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const imageUrl = await uploadImage(file);
+      if (imageUrl) {
+        const newColors = [...subProductForm.colors];
+        newColors[colorIndex] = {
+          ...newColors[colorIndex],
+          images: [...(newColors[colorIndex].images || []), imageUrl],
+        };
+        setSubProductForm((prev) => ({
+          ...prev,
+          colors: newColors,
+        }));
+      }
+    } catch (error) {
+      console.error('Renk resmi yükleme hatası:', error);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   return (
     <div className='p-6'>
       <h1 className='mb-8 text-2xl font-bold'>Ürün Yönetimi</h1>
@@ -601,6 +710,143 @@ const Products = () => {
                     setSubProductForm({ ...subProductForm, description: newContent })
                   }
                 />
+              </div>
+
+              <div>
+                <div className='mb-2 flex items-center justify-between'>
+                  <label className='text-sm font-medium'>Ölçü ve Kodlar</label>
+                  <button
+                    type='button'
+                    onClick={handleAddSubProductOlcuKod}
+                    className='flex items-center gap-1 rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700'
+                  >
+                    <BsPlus className='h-5 w-5' />
+                    Yeni Ekle
+                  </button>
+                </div>
+                <div className='space-y-3'>
+                  {subProductForm.olcuvekodlar.map((olcuKod, index) => (
+                    <div key={index} className='flex items-center gap-2'>
+                      <input
+                        type='text'
+                        value={olcuKod.kod}
+                        onChange={(e) =>
+                          handleSubProductOlcuKodChange(index, 'kod', e.target.value)
+                        }
+                        placeholder='Kod'
+                        className='w-1/3 rounded border p-2'
+                      />
+                      <input
+                        type='text'
+                        value={olcuKod.uzunluk}
+                        onChange={(e) =>
+                          handleSubProductOlcuKodChange(index, 'uzunluk', e.target.value)
+                        }
+                        placeholder='Uzunluk'
+                        className='w-1/3 rounded border p-2'
+                      />
+                      <input
+                        type='text'
+                        value={olcuKod.genislik}
+                        onChange={(e) =>
+                          handleSubProductOlcuKodChange(index, 'genislik', e.target.value)
+                        }
+                        placeholder='Genişlik'
+                        className='w-1/3 rounded border p-2'
+                      />
+                      <button
+                        type='button'
+                        onClick={() => handleRemoveSubProductOlcuKod(index)}
+                        className='rounded bg-red-500 p-2 text-white hover:bg-red-600'
+                      >
+                        <BsTrash className='h-4 w-4' />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className='mb-2 flex items-center justify-between'>
+                  <label className='text-sm font-medium'>Renk Seçenekleri</label>
+                  <button
+                    type='button'
+                    onClick={handleAddSubProductColor}
+                    className='flex items-center gap-1 rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700'
+                  >
+                    <BsPlus className='h-5 w-5' />
+                    Renk Ekle
+                  </button>
+                </div>
+                <div className='space-y-6'>
+                  {subProductForm.colors.map((color, colorIndex) => (
+                    <div key={colorIndex} className='rounded-lg border border-gray-200 p-4'>
+                      <div className='mb-4 flex items-center justify-between'>
+                        <input
+                          type='text'
+                          value={color.name}
+                          onChange={(e) => handleSubProductColorChange(colorIndex, e.target.value)}
+                          placeholder='Renk adı (örn: Siyah)'
+                          className='w-full rounded border p-2'
+                        />
+                        <button
+                          type='button'
+                          onClick={() => handleRemoveSubProductColor(colorIndex)}
+                          className='ml-2 rounded bg-red-500 p-2 text-white hover:bg-red-600'
+                        >
+                          <BsTrash className='h-4 w-4' />
+                        </button>
+                      </div>
+
+                      <div className='flex flex-wrap gap-4'>
+                        {color.images.map((image, imageIndex) => (
+                          <div key={imageIndex} className='relative'>
+                            <img src={image} alt='' className='h-20 w-20 rounded object-cover' />
+                            <button
+                              type='button'
+                              onClick={() =>
+                                handleRemoveSubProductColorImage(colorIndex, imageIndex)
+                              }
+                              className='absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600'
+                            >
+                              <svg className='h-4 w-4' viewBox='0 0 20 20' fill='currentColor'>
+                                <path
+                                  fillRule='evenodd'
+                                  d='M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z'
+                                  clipRule='evenodd'
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                        <div className='relative'>
+                          <input
+                            type='file'
+                            accept='image/*'
+                            onChange={(e) => handleImageUpload(e, true, colorIndex)}
+                            className='absolute inset-0 cursor-pointer opacity-0'
+                          />
+                          <button
+                            type='button'
+                            className='flex h-20 w-20 items-center justify-center rounded border-2 border-dashed border-gray-300 hover:border-gray-400'
+                          >
+                            <svg
+                              className='h-8 w-8 text-gray-400'
+                              viewBox='0 0 20 20'
+                              fill='currentColor'
+                            >
+                              <path
+                                fillRule='evenodd'
+                                d='M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z'
+                                clipRule='evenodd'
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div>
@@ -964,163 +1210,110 @@ const Products = () => {
             </form>
           </div>
         )}
+      </div>
 
-        <div className='rounded-lg bg-white p-6 shadow-md'>
-          <h2 className='mb-6 text-xl font-semibold'>Liste</h2>
-          <div className='space-y-4'>
-            {activeTab === 'categories' ? (
-              categories.map((category, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className='flex items-center justify-between rounded-lg border p-4 hover:shadow-md'
+      <div className='mt-8'>
+        {activeTab === 'categories' ? (
+          // Kategori Listesi
+          <div className='rounded-lg bg-white p-6 shadow-md'>
+            <h2 className='mb-6 text-xl font-semibold'>Kategoriler</h2>
+            <div className='space-y-4'>
+              {categories.map((category) => (
+                <div
+                  key={category.id}
+                  className='flex items-center justify-between rounded border p-4'
                 >
-                  <div className='flex items-center gap-4'>
-                    {category.image && (
-                      <img
-                        src={category.image}
-                        alt={category.title}
-                        className='h-12 w-12 object-contain'
-                      />
-                    )}
-                    <div>
-                      <h3 className='font-medium'>{category.title}</h3>
-                    </div>
+                  <div>
+                    <h3 className='text-lg font-semibold'>{category.title}</h3>
+                    <p className='text-sm text-gray-600'>{category.slug}</p>
                   </div>
-
-                  <div className='flex gap-2'>
-                    <motion.button
-                      onClick={() => {
-                        setEditingCategory(category);
-                        setCategoryForm(category);
-                      }}
-                      className='rounded-lg p-2 text-blue-600 hover:bg-blue-50'
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
+                  <div className='flex items-center gap-2'>
+                    <button
+                      onClick={() => setEditingCategory(category)}
+                      className='rounded bg-blue-600 p-2 text-white hover:bg-blue-700'
                     >
-                      <BsPencil />
-                    </motion.button>
-                    <motion.button
+                      <BsPencil className='h-4 w-4' />
+                    </button>
+                    <button
                       onClick={() => handleDeleteCategory(category.id)}
-                      className='rounded-lg p-2 text-red-600 hover:bg-red-50'
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
+                      className='rounded bg-red-500 p-2 text-white hover:bg-red-600'
                     >
-                      <BsTrash />
-                    </motion.button>
+                      <BsTrash className='h-4 w-4' />
+                    </button>
                   </div>
-                </motion.div>
-              ))
-            ) : activeTab === 'subproducts' ? (
-              <div className='space-y-6'>
-                {products
-                  .filter((p) => !p.isSubProduct)
-                  .map((parentProduct) => {
-                    const subProducts = products.filter(
-                      (p) => p.isSubProduct && p.parentId === parentProduct.id
-                    );
-
-                    return (
-                      <div key={parentProduct.id} className='space-y-2'>
-                        <div className='rounded-lg border bg-gray-50 p-4'>
-                          <h3 className='font-medium'>{parentProduct.title}</h3>
-                        </div>
-                        <div className='ml-8 space-y-2'>
-                          {subProducts.map((subProduct) => (
-                            <motion.div
-                              key={subProduct.id}
-                              className='flex items-center justify-between rounded-lg border p-4 hover:shadow-md'
-                            >
-                              <div className='flex items-center gap-4'>
-                                {subProduct.images?.[0] && (
-                                  <img
-                                    src={subProduct.images[0]}
-                                    alt={subProduct.title}
-                                    className='h-12 w-12 object-contain'
-                                  />
-                                )}
-                                <div>
-                                  <h4 className='font-medium'>{subProduct.title}</h4>
-                                </div>
-                              </div>
-
-                              <div className='flex gap-2'>
-                                <motion.button
-                                  onClick={() => {
-                                    setEditingProduct(subProduct);
-                                    setSubProductForm(subProduct);
-                                  }}
-                                  className='rounded-lg p-2 text-blue-600 hover:bg-blue-50'
-                                  whileHover={{ scale: 1.1 }}
-                                  whileTap={{ scale: 0.9 }}
-                                >
-                                  <BsPencil />
-                                </motion.button>
-                                <motion.button
-                                  onClick={() => handleDeleteProduct(subProduct.id)}
-                                  className='rounded-lg p-2 text-red-600 hover:bg-red-50'
-                                  whileHover={{ scale: 1.1 }}
-                                  whileTap={{ scale: 0.9 }}
-                                >
-                                  <BsTrash />
-                                </motion.button>
-                              </div>
-                            </motion.div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            ) : (
-              products.map((product, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className='flex items-center justify-between rounded-lg border p-4 hover:shadow-md'
-                >
-                  <div className='flex items-center gap-4'>
-                    {product.images?.[0] && (
-                      <img
-                        src={product.images[0]}
-                        alt={product.title}
-                        className='h-12 w-12 object-contain'
-                      />
-                    )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : activeTab === 'subproducts' ? (
+          // Alt Ürün Listesi
+          <div className='rounded-lg bg-white p-6 shadow-md'>
+            <h2 className='mb-6 text-xl font-semibold'>Alt Ürünler</h2>
+            <div className='space-y-4'>
+              {products
+                .filter((product) => product.isSubProduct)
+                .map((product) => (
+                  <div
+                    key={product.id}
+                    className='flex items-center justify-between rounded border p-4'
+                  >
                     <div>
-                      <h3 className='font-medium'>{product.title}</h3>
-                      <p className='text-sm text-gray-500'>{product.categorySlug}</p>
+                      <h3 className='text-lg font-semibold'>{product.title}</h3>
+                      <p className='text-sm text-gray-600'>{product.parentTitle}</p>
+                    </div>
+                    <div className='flex items-center gap-2'>
+                      <button
+                        onClick={() => setEditingProduct(product)}
+                        className='rounded bg-blue-600 p-2 text-white hover:bg-blue-700'
+                      >
+                        <BsPencil className='h-4 w-4' />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteProduct(product.id)}
+                        className='rounded bg-red-500 p-2 text-white hover:bg-red-600'
+                      >
+                        <BsTrash className='h-4 w-4' />
+                      </button>
                     </div>
                   </div>
-
-                  <div className='flex gap-2'>
-                    <motion.button
-                      onClick={() => {
-                        setEditingProduct(product);
-                        setProductForm(product);
-                      }}
-                      className='rounded-lg p-2 text-blue-600 hover:bg-blue-50'
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <BsPencil />
-                    </motion.button>
-                    <motion.button
-                      onClick={() => handleDeleteProduct(product.id)}
-                      className='rounded-lg p-2 text-red-600 hover:bg-red-50'
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <BsTrash />
-                    </motion.button>
-                  </div>
-                </motion.div>
-              ))
-            )}
+                ))}
+            </div>
           </div>
-        </div>
+        ) : (
+          // Ürün Listesi
+          <div className='rounded-lg bg-white p-6 shadow-md'>
+            <h2 className='mb-6 text-xl font-semibold'>Ürünler</h2>
+            <div className='space-y-4'>
+              {products
+                .filter((product) => !product.isSubProduct)
+                .map((product) => (
+                  <div
+                    key={product.id}
+                    className='flex items-center justify-between rounded border p-4'
+                  >
+                    <div>
+                      <h3 className='text-lg font-semibold'>{product.title}</h3>
+                      <p className='text-sm text-gray-600'>{product.categorySlug}</p>
+                    </div>
+                    <div className='flex items-center gap-2'>
+                      <button
+                        onClick={() => setEditingProduct(product)}
+                        className='rounded bg-blue-600 p-2 text-white hover:bg-blue-700'
+                      >
+                        <BsPencil className='h-4 w-4' />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteProduct(product.id)}
+                        className='rounded bg-red-500 p-2 text-white hover:bg-red-600'
+                      >
+                        <BsTrash className='h-4 w-4' />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
